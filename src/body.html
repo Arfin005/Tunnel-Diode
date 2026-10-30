@@ -1,0 +1,34 @@
+<div class="app">
+  <header class="top">
+    <button class="btn icon" id="menuBtn" aria-label="Show contents" aria-controls="toc">☰</button>
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/><path d="M4 22 C7 22 7 7 10 7 C13 7 13 19 17 19 C21 19 21 16 23 13 C24.5 10 25.5 6 26.5 4" fill="none" stroke="#1c58d0" stroke-width="2.2" stroke-linecap="round"/><circle cx="10" cy="7" r="1.8" fill="#e0457b"/><circle cx="17" cy="19" r="1.8" fill="#e0457b"/></svg>
+      <b>Tunnel Diode Lab</b><span>Current-voltage characteristics &amp; device performance · Part 5</span>
+    </div>
+    <div class="grow"></div>
+    <button class="btn" id="prevBtn" aria-label="Previous section">← <span class="wide-l">Prev</span></button>
+    <button class="btn" id="nextBtn" aria-label="Next section"><span class="wide-l">Next</span> →</button>
+  </header>
+  <div class="shell">
+    <nav class="toc" id="toc" aria-label="Contents"></nav>
+    <main class="read" id="read"><article id="article"></article><nav class="pager" id="pager"></nav></main>
+    <section class="lab" id="lab" aria-label="Interactive visualisation">
+      <div class="lab-head"><div class="tabs" id="tabs" role="tablist" aria-label="Visualisation options"></div>
+        <div class="tools" id="tools">
+          <button id="tAnim" class="on" title="Pause or play animation" aria-label="Pause or play animation">❚❚</button>
+          <button id="tSpin" title="Auto-rotate the 3D scene">Spin</button>
+          <button id="tFront" title="Look straight at the front">Front</button>
+          <button id="tReset" title="Reset the camera">Reset</button>
+          <button id="tFull" title="Fullscreen" aria-label="Fullscreen">⤢</button>
+        </div></div>
+      <div class="vt" id="vtitle"></div>
+      <div class="screen" id="screen">
+        <canvas id="c3"></canvas>
+        <canvas id="c2"></canvas>
+        <div id="hv" hidden></div>
+      </div>
+      <div class="readout" id="readout"></div>
+      <div class="controls" id="controls"></div>
+    </section>
+  </div>
+</div>
