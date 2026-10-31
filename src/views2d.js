@@ -108,10 +108,10 @@ const CHAINS=[
   {t:'Low series inductance keeps the diode stable',n:['L_s ↓','f_{x0} ↑','f_{x0} > f_{r0}','no self-oscillation']},
   {t:'Tunnelling diode family at a glance',n:['p⁺–n⁺ heavy doping','thin barrier','tunnelling','peak point','NDR region','circuit −R']}
 ];
-VIEWS.chain={kind:'2d',anim:true,title:'Cause → effect chain',sub:'Each step drives the next — watch the signal propagate',
-  params:[SEL('c','Chain',CHAINS.map((c,i)=>[String(i),c.t]),'0'),R('sp','Speed',0.2,2,0.1,0.8,'×',{f:v=>v.toFixed(1)+'×'})],
+function chainView(LIST){return {kind:'2d',anim:true,title:'Cause → effect chain',sub:'Each step drives the next — watch the signal propagate',
+  params:[SEL('c','Chain',LIST.map((c,i)=>[String(i),c.t]),'0'),R('sp','Speed',0.2,2,0.1,0.8,'×',{f:v=>v.toFixed(1)+'×'})],
   draw(g,W,H,p,t){
-    const ch=CHAINS[+p.c],n=ch.n.length;rich(g,ch.t,W/2,40,{align:'center',size:16,font:SANS,weight:600,color:C.tot});
+    const ch=LIST[+p.c]||LIST[0],n=ch.n.length;rich(g,ch.t,W/2,40,{align:'center',size:16,font:SANS,weight:600,color:C.tot});
     g.font=`15px ${MONO}`;const ws=ch.n.map(s=>richW(g,s,15,MONO)+34);
     const maxW=W-60,rows=[];let cur=[],cw=0;ws.forEach((w,i)=>{if(cw+w+(cur.length?54:0)>maxW&&cur.length){rows.push(cur);cur=[];cw=0}cur.push(i);cw+=w+(cur.length>1?54:0)});rows.push(cur);
     const rowH=96,top=H/2-rows.length*rowH/2+20,pos=[];
@@ -124,8 +124,9 @@ VIEWS.chain={kind:'2d',anim:true,title:'Cause → effect chain',sub:'Each step d
       const up=/↑/.test(s),dn=/↓/.test(s);rich(g,s,q.x+q.w/2,q.y+q.h/2,{align:'center',size:15,color:lit?(up?'#7ff0c5':dn?'#ff9ab4':C.tot):C.mute})});
     g.fillStyle=C.mute;g.font=`12px ${SANS}`;g.textAlign='center';g.fillText('Green ↑ = quantity increases · pink ↓ = quantity decreases',W/2,H-24);g.textAlign='left';
   },
-  read(p){const ch=CHAINS[+p.c];return [['Links',String(ch.n.length-1)],['Start',ch.n[0]],['Result',ch.n[ch.n.length-1]]]}
-};
+  read(p){const ch=LIST[+p.c]||LIST[0];return [['Links',String(ch.n.length-1)],['Start',ch.n[0]],['Result',ch.n[ch.n.length-1]]]}
+}}
+VIEWS.chain=chainView(CHAINS);
 
 /* ---------- ordinary diode vs tunnel diode ---------- */
 VIEWS.compare={kind:'2d',title:'Ordinary p-n diode vs tunnel diode',sub:'Same axes, forward and reverse bias',drag:'V',

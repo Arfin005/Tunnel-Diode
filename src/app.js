@@ -86,6 +86,7 @@ function mount(vi,set={}){
   const spec=ST.page.v[vi]||ST.page.v[0];ST.vi=vi;const view=VIEWS[spec[0]];ST.view=view;
   const p={};for(const q of view.params)p[q.id]=q.v;Object.assign(p,spec[2]||{});
   for(const k in set){const q=view.params.find(x=>x.id===k);if(q)p[k]=coerce(q,set[k])}
+  if(view.onSet)for(const k of Object.keys({...(spec[2]||{}),...set})){Object.assign(p,view.onSet(k,p[k],p)||{})}
   ST.p=p;ST.S={};
   document.querySelectorAll('#tabs .tab').forEach((b,i)=>{b.classList.toggle('on',i===vi);b.setAttribute('aria-selected',i===vi)});
   const hint=view.kind==='3d'?'Drag to orbit · scroll or pinch to zoom · shift-drag to pan':view.drag?'Drag across the plot to move the marker':'';
@@ -116,8 +117,9 @@ function buildControls(){
 function setParam(k,raw,fromUI=true){
   const q=ST.view.params.find(x=>x.id===k);if(!q)return;
   let v=q.t==='r'?(q.log?10**(+raw):+raw):q.t==='c'?!!raw:String(raw);ST.p[k]=v;
-  if(q.t==='r'){const o=$('#ctl-'+k+'-o');if(o)o.textContent=fmtVal(q,v);if(!fromUI){const i=$('#ctl-'+k);if(i)i.value=q.log?Math.log10(v):v}}
+  if(q.t==='r'){const o=$('#ctl-'+k+'-o');if(o)o.textContent=fmtVal(q,v);if(fromUI!==true){const i=$('#ctl-'+k);if(i)i.value=q.log?Math.log10(v):v}}
   if(ST.view.preset&&k==='proc'&&ST.view.preset[v]){for(const [kk,vv] of Object.entries(ST.view.preset[v]))setParam(kk,ST.view.params.find(x=>x.id===kk).log?Math.log10(vv):vv,false)}
+  if(ST.view.onSet&&fromUI!=='hook'){const ch=ST.view.onSet(k,v,ST.p)||{};for(const [kk,vv] of Object.entries(ch)){const q2=ST.view.params.find(x=>x.id===kk);if(!q2)continue;if(q2.t==='s'){ST.p[kk]=String(vv);const sel=$('#ctl-'+kk);if(sel)sel.value=String(vv)}else setParam(kk,q2.log?Math.log10(vv):vv,'hook')}}
   apply();
 }
 let rq=0;function apply(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;const v=ST.view;if(v.kind==='3d'&&ST.inst)ST.inst.update(ST.p);else if(v.kind==='html')v.render(hv,ST.p);ST.dirty=true;updateReadout()})}

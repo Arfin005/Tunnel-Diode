@@ -16,30 +16,31 @@ const CONCEPT=[
   {t:'R_s, L_s, C_j, −R',s:'equivalent circuit',go:'equivalent-circuit',p:[6.0,-1.6,-1.2]}
 ];
 const CEDGES=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[4,7]];
-VIEWS.concept=V3({title:'Topic map — click any block to open it',sub:'Concept ⇒ Formula ⇒ Derivation ⇒ Physical meaning ⇒ Exam tip',home:{r:21,th:0.18,ph:1.32,t:[0,0.2,0]},
+function conceptView(NODES,EDGES,HI,CAP){return V3({title:'Topic map — click any block to open it',sub:'Concept ⇒ Formula ⇒ Derivation ⇒ Physical meaning ⇒ Exam tip',home:{r:21,th:0.18,ph:1.32,t:[0,0.2,0]},
   params:[K('flow','Animate the flow',true)],
   build(S){
     const g=S.root,nodes=[],pulses=[],curves=[];
-    CONCEPT.forEach((c,i)=>{
-      const w=Math.max(2.3,c.t.length*0.19+0.6);const box=new THREE.Mesh(new THREE.BoxGeometry(w,1.25,0.5),mat(i===4?'#3a1630':'#16233a',{emissive:i===4?'#3a0f26':'#0d1a30',emissiveIntensity:.6}));
+    NODES.forEach((c,i)=>{
+      const w=Math.max(2.3,c.t.length*0.19+0.6);const box=new THREE.Mesh(new THREE.BoxGeometry(w,1.25,0.5),mat(i===HI?'#3a1630':'#16233a',{emissive:i===HI?'#3a0f26':'#0d1a30',emissiveIntensity:.6}));
       box.position.set(...c.p);box.userData={go:c.go,i};g.add(box);nodes.push(box);
-      const ed=new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry),new THREE.LineBasicMaterial({color:i===4?0xff5c8a:0x6ea2ff}));box.add(ed);
+      const ed=new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry),new THREE.LineBasicMaterial({color:i===HI?0xff5c8a:0x6ea2ff}));box.add(ed);
       const t1=tlabel(c.t,{size:.5,color:'#ffffff',weight:600,font:MATHF,depth:false,order:8});t1.position.set(0,0.2,0.32);box.add(t1);
       const t2=tlabel(c.s,{size:.32,color:'#9fb3d1',font:SANS,depth:false,order:8});t2.position.set(0,-0.3,0.32);box.add(t2);
     });
-    CEDGES.forEach(([a,b])=>{const A=new THREE.Vector3(...CONCEPT[a].p),B=new THREE.Vector3(...CONCEPT[b].p);const M_=A.clone().add(B).multiplyScalar(.5);M_.z+=0.9;
+    EDGES.forEach(([a,b])=>{const A=new THREE.Vector3(...NODES[a].p),B=new THREE.Vector3(...NODES[b].p);const M_=A.clone().add(B).multiplyScalar(.5);M_.z+=0.9;
       const cv=new THREE.CatmullRomCurve3([A,M_,B]);curves.push(cv);const tb=new THREE.Mesh(new THREE.TubeGeometry(cv,40,0.035,6),mat('#6ea2ff',{emissive:'#2c5bd0',emissiveIntensity:.8,transparent:true,opacity:.75}));g.add(tb);
       for(let k=0;k<3;k++){const s=ball(0.09,'#38d6e8',{ei:1.2});s.userData={cv,o:k/3};g.add(s);pulses.push(s)}});
     const fl=new THREE.Mesh(new THREE.CircleGeometry(11,64),mat('#0e1622',{transparent:true,opacity:.6}));fl.rotation.x=-Math.PI/2;fl.position.y=-2.8;g.add(fl);
-    g.add(tlabel('Learning path · Part 5',{size:.36,pos:[0,3.6,0],color:'#9fb3d1',font:SANS}));
+    g.add(tlabel(CAP,{size:.36,pos:[0,3.6,0],color:'#9fb3d1',font:SANS}));
     let hov=null;
     S.orbit.onHover=e=>{const h=S.pick(e,nodes);if(hov&&hov!==h)hov.scale.set(1,1,1);hov=h;if(h){h.scale.set(1.08,1.08,1.08);S.canvas.style.cursor='pointer'}else S.canvas.style.cursor=''};
     S.orbit.onClick=e=>{const h=S.pick(e,nodes);if(h)go(h.userData.go)};
     let flow=true;
-    return {update(p){flow=p.flow},tick(t){if(!flow)return;for(const s of pulses){const u=(t*0.25+s.userData.o)%1;s.position.copy(s.userData.cv.getPoint(u))}nodes.forEach((n,i)=>{n.position.y=CONCEPT[i].p[1]+Math.sin(t*1.2+i)*0.05})}};
+    return {update(p){flow=p.flow},tick(t){if(!flow)return;for(const s of pulses){const u=(t*0.25+s.userData.o)%1;s.position.copy(s.userData.cv.getPoint(u))}nodes.forEach((n,i)=>{n.position.y=NODES[i].p[1]+Math.sin(t*1.2+i)*0.05})}};
   },
-  read(){return [['blocks','8 concepts'],['links','7 causal links'],['tip','click a block to jump']]}
-});
+  read(){return [['blocks',NODES.length+' concepts'],['links',EDGES.length+' causal links'],['tip','click a block to jump']]}
+})}
+VIEWS.concept=conceptView(CONCEPT,CEDGES,4,'Learning path · Part 5');
 
 /* ---------- complex wavefunction through a barrier ---------- */
 const cx={m:(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],a:(a,b)=>[a[0]+b[0],a[1]+b[1]],s:(a,b)=>[a[0]-b[0],a[1]-b[1]],d:(a,b)=>{const q=b[0]*b[0]+b[1]*b[1];return [(a[0]*b[0]+a[1]*b[1])/q,(a[1]*b[0]-a[0]*b[1])/q]},e:th=>[Math.cos(th),Math.sin(th)],k:(a,s)=>[a[0]*s,a[1]*s]};
