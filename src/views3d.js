@@ -36,7 +36,7 @@ function conceptView(NODES,EDGES,HI,CAP){return V3({title:'Topic map — click a
     S.orbit.onHover=e=>{const h=S.pick(e,nodes);if(hov&&hov!==h)hov.scale.set(1,1,1);hov=h;if(h){h.scale.set(1.08,1.08,1.08);S.canvas.style.cursor='pointer'}else S.canvas.style.cursor=''};
     S.orbit.onClick=e=>{const h=S.pick(e,nodes);if(h)go(h.userData.go)};
     let flow=true;
-    return {update(p){flow=p.flow},tick(t){if(!flow)return;for(const s of pulses){const u=(t*0.25+s.userData.o)%1;s.position.copy(s.userData.cv.getPoint(u))}nodes.forEach((n,i)=>{n.position.y=NODES[i].p[1]+Math.sin(t*1.2+i)*0.05})}};
+    return {update(p){flow=p.flow},tick(t){if(!flow)return;for(const s of pulses){const u=(((t*0.25+s.userData.o)%1)+1)%1;s.position.copy(s.userData.cv.getPoint(u))}nodes.forEach((n,i)=>{n.position.y=NODES[i].p[1]+Math.sin(t*1.2+i)*0.05})}};
   },
   read(){return [['blocks',NODES.length+' concepts'],['links',EDGES.length+' causal links'],['tip','click a block to jump']]}
 })}
@@ -418,7 +418,7 @@ VIEWS.spread=V3({title:'Spreading resistance R_{spread} ≈ ρ/2d',sub:'Current 
         const s=ball(0.06,'#bff3ff',{ei:1.4});s.userData={c,o:i/n};dyn.add(s);flows.push(s)}
       dyn.add(tlabel('contact  d = '+p.d.toFixed(1)+' µm',{size:.32,pos:[0,0.6,0],color:'#ffe08a'}));
       const Rv=p.rho*1e-5/(2*p.d*1e-6);dyn.add(tlabel('R_{spread} = '+si(Rv,'Ω'),{size:.42,pos:[0,1.4,0],color:'#ffffff',bg:'rgba(10,15,22,.7)'}))},
-      tick(t){flows.forEach(s=>{const u=MOTION?(t*0.3+s.userData.o)%1:s.userData.o;s.position.copy(s.userData.c.getPoint(u))})}}},
+      tick(t){flows.forEach(s=>{const u=MOTION?(((t*0.3+s.userData.o)%1)+1)%1:s.userData.o;s.position.copy(s.userData.c.getPoint(u))})}}},
   read(p){const Rv=p.rho*1e-5/(2*p.d*1e-6);return [['R_{spread}',si(Rv,'Ω'),Rv<1?'good':'warn'],['ρ',si(p.rho*1e-5,'Ω·m')],['units','Ω·m / m = Ω'],['d ×2 → R','÷2']]}
 });
 

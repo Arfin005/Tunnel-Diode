@@ -6,13 +6,25 @@ function lite(s){return runs(String(s)).map(r=>r.k===1?`<sub>${r.t}</sub>`:r.k==
 
 /* ---------- 3D setup ---------- */
 let R3=null;
+let R3WHY='';
 function init3(){
-  if(!HAS3D)return;
-  try{
-    const renderer=new THREE.WebGLRenderer({canvas:c3,antialias:true,alpha:true});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x000000,0);
-    const cam=new THREE.PerspectiveCamera(42,1,0.05,400);R3={renderer,cam,orbit:new Orbit(cam,c3),scene:null,ray:new THREE.Raycaster()};
-  }catch(e){R3=null}
+  if(typeof THREE==='undefined'){R3WHY='lib';return}
+  const opts=[{antialias:true,alpha:true},{antialias:false,alpha:true},{antialias:false,alpha:true,powerPreference:'low-power',failIfMajorPerformanceCaveat:false}];
+  for(const o of opts){
+    try{
+      const renderer=new THREE.WebGLRenderer(Object.assign({canvas:c3},o));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x000000,0);
+      const cam=new THREE.PerspectiveCamera(42,1,0.05,400);R3={renderer,cam,orbit:new Orbit(cam,c3),scene:null,ray:new THREE.Raycaster()};
+      c3.addEventListener('webglcontextlost',e=>{e.preventDefault();R3WHY='lost';const keep=R3;R3=null;if(ST.view&&ST.view.kind==='3d')mount(ST.vi);R3=keep},false);
+      c3.addEventListener('webglcontextrestored',()=>{R3WHY='';if(ST.view&&ST.view.kind==='3d')mount(ST.vi)},false);
+      return;
+    }catch(e){R3=null;R3WHY='webgl'}
+  }
+}
+function no3dHTML(){
+  const why=R3WHY==='lib'?'The 3D engine (three.js) did not load in this browser.':R3WHY==='lost'?'The graphics context was lost (the GPU was reset or is busy).':R3WHY==='err'?'This 3D scene hit an error while drawing.':'WebGL could not start in this browser. Hardware acceleration may be switched off (browser settings → System → "Use graphics acceleration").';
+  const alt=ST.page.v.map((s,i)=>[s,i]).filter(([s])=>VIEWS[s[0]].kind!=='3d');
+  return `<div class="calc"><div class="step on"><h4>3D view unavailable</h4>${why}${alt.length?`<br><br>Other views for this section:<br>${alt.map(([s,i])=>`<button class="try" data-alt="${i}">${lite(s[1])}</button>`).join(' ')}`:''}<br><br><small>WebGL check: open <span style="font-family:var(--f-mono)">get.webgl.org</span> in this browser.</small></div></div>`;
 }
 function newScene(){
   const s=new THREE.Scene();
@@ -69,6 +81,7 @@ $('#article').addEventListener('click',e=>{
   mount(vi,set);if(window.innerWidth<=860)$('#lab').scrollIntoView({behavior:MOTION?'smooth':'auto'});
 });
 
+hv.addEventListener('click',e=>{const b=e.target.closest('[data-alt]');if(b)mount(+b.dataset.alt)});
 /* ---------- tabs ---------- */
 function buildTabs(){
   $('#tabs').innerHTML=ST.page.v.map((s,i)=>{const v=VIEWS[s[0]];const k=v.kind==='3d'?'3D':v.kind==='html'?'calc':'2D';return `<button class="tab" role="tab" data-i="${i}" aria-selected="false"><span class="k">${k}</span>${s[1]}</button>`}).join('');
@@ -95,9 +108,10 @@ function mount(vi,set={}){
   c3.hidden=!is3;c2.hidden=!is2;hv.hidden=!(ish||(is3&&!R3));
   $('#tSpin').hidden=$('#tFront').hidden=$('#tReset').hidden=!is3;$('#tAnim').hidden=ish;
   if(is3){
-    if(!R3){hv.innerHTML='<div class="calc"><div class="step"><h4>3D view unavailable</h4>WebGL could not start in this browser. The 2D tabs for this section still work.</div></div>'}
-    else{const sc=newScene();R3.scene=sc.s;R3.orbit.spin=$('#tSpin').classList.contains('on');
+    if(!R3){hv.hidden=false;c3.hidden=true;hv.innerHTML=no3dHTML()}
+    else{try{const sc=newScene();R3.scene=sc.s;R3.orbit.spin=$('#tSpin').classList.contains('on');
       ST.S={scene:sc.s,root:sc.root,cam:R3.cam,orbit:R3.orbit,canvas:c3,pick};ST.inst=view.build(ST.S);R3.orbit.set(view.home||{r:13,th:0.7,ph:1.1,t:[0,0,0]});ST.inst.update(p)}
+      catch(err){console.error(err);ST.inst=null;R3WHY='err';hv.hidden=false;c3.hidden=true;hv.innerHTML=no3dHTML()}}
   }else if(ish){view.render(hv,p)}
   buildControls();ST.dirty=true;updateReadout();
 }
@@ -153,13 +167,13 @@ $('#tFull').addEventListener('click',()=>{const el=$('#lab');try{if(document.ful
 /* ---------- loop ---------- */
 let last=performance.now(),frame=0;
 function loop(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;frame++;if(ST.playing)ST.T+=dt;
+  requestAnimationFrame(loop); // reschedule first so one bad frame can never stop the animation
+  const dt=clamp(((now||performance.now())-last)/1000,0,0.05);last=Math.max(last,now||0);frame++;if(ST.playing)ST.T+=dt;
   const v=ST.view;
   if(v){
-    if(v.kind==='3d'&&R3&&ST.inst&&R3.scene){ST.inst.tick(ST.T,ST.playing?dt:0,ST.p);R3.orbit.update(dt);R3.renderer.render(R3.scene,R3.cam);if(v.live&&frame%12===0)updateReadout()}
+    if(v.kind==='3d'&&R3&&ST.inst&&R3.scene){try{ST.inst.tick(ST.T,ST.playing?dt:0,ST.p);R3.orbit.update(dt);R3.renderer.render(R3.scene,R3.cam)}catch(err){console.error(err);ST.inst=null;R3WHY='err';hv.hidden=false;c3.hidden=true;hv.innerHTML=no3dHTML()}if(v.live&&frame%12===0)updateReadout()}
     else if(v.kind==='2d'&&(ST.dirty||(v.anim&&ST.playing))){const g=c2.getContext('2d'),dpr=c2.width/SW;g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,SW,SH);try{v.draw(g,SW,SH,ST.p,ST.T,ST.S)}catch(err){console.error(err)}if(ST.dirty)updateReadout();ST.dirty=false}
   }
-  requestAnimationFrame(loop);
 }
 
 /* ---------- boot ---------- */

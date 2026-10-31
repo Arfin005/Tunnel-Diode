@@ -9,7 +9,7 @@ circuit simulations and step-by-step calculators.
 | `index.html` | Part 5 — Tunnel Diode: Current-Voltage Characteristics and Device Performance | sections 1 → 25.4 (72 pages) |
 | `rtd.html` | Part 6 — Resonant-Tunneling Diode | sections 1 → 32.4 (95 pages) |
 
-Open either file in a browser (they load Three.js r128 from cdnjs and fonts from Google Fonts).
+Open either file in a browser. Three.js r128 (MIT, `src/vendor/`) is embedded, so 3D works without any CDN; only the fonts come from Google Fonts.
 
 ## Structure
 

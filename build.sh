@@ -12,7 +12,7 @@ page(){ # title sub out scripts... ; $DOC=1 adds the document skeleton
   { [ "$DOC" = 1 ] && echo '<!doctype html>' && echo '<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
     sed "s|{{TITLE}}|$title|" $S/head.html; [ "$DOC" = 1 ] && echo '</head><body>'
     sed -e "s|{{TITLE}}|$title|" -e "s|{{SUB}}|$sub|" $S/body.html
-    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
+    echo '<script>'; cat $S/vendor/three.min.js; echo; echo '</script>'
     echo '<script>'; cat $S/core.js $S/views2d.js $S/views3d.js "$@" $S/app.js; echo '</script>'
     [ "$DOC" = 1 ] && echo '</body></html>'; true; } > "$out"
   echo "built $out ($(wc -c < "$out") bytes)"
